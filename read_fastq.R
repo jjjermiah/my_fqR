@@ -6,6 +6,7 @@
     # 3) Qualities
     # 4) GC content
 
+
 library(assertthat)
 library(tibble)
 library(stringr)
