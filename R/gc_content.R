@@ -1,13 +1,10 @@
-# input: vector of DNA sequence strings
-
-# return: vector of %GC values (what % of the bases are G or C)
-
-# notes:
-# 1) verify argument is a character vector
-# 2) verify that the bases in the strings only consist of GAT or C and throw
-#   a warning if other bases are found
-# 3) cope with upper and lower case text
-
+#' Calculate GC content of sequencee
+#'
+#' @description
+#' this function will take in a vector of sequences and calculate the GC content
+#'
+#' @param my_seq character vector
+#' @returns: vector of %GC values (what % of the bases are G or C)
 gc_content <- function(my_seq){
 
     #verify argument is a char vector
