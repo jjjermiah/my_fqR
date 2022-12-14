@@ -1,0 +1,30 @@
+Goal:
+- develop a package to read and manipulate fastq? formate sequence files
+    - these are files produced by most DNA sequencers and they contain both 
+    base calls and associated quality scores for multiple sequencers
+
+- FastQ files are composed of entries consisting of 4 lines
+
+1. ID line:
+    starts with @symbol,
+    seequence ID is anything after that
+    IDs should be unique
+2. Sequence line:
+    should be a string of G/A/T/C/N bases
+3. Mid line -
+    starts with a + and are generally ignored?
+4. Quality line:
+    should be a string of charaters th same length as the sequence
+
+i.e: 
+
+@1HWUSI-EAS460:44:661VRAAXX:2:1:15253:1153
+GCCNGGCTATGCAAGCAGGCTGCAGTGTGGATATAGTCGT
++1HWUSI-EAS460:44:661VRAAXX:2:1:15253:1153
+???#;ABAAAHHHHGHFGDHEG@GG@GDGGB>DDDGBDD=
+
+@2HWUSI-EAS460:44:661VRAAXX:2:1:17398:1153
+CAGNGAATCCTTGAGGCACCTTCTCTTATAAAAACA
++2HWUSI-EAS460:44:661VRAAXX:2:1:17398:1153
+BBB#BFFFEFHHHHHDHHHHHHHHHHHHHHHHHHHH
+

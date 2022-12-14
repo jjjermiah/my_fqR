@@ -1,0 +1,217 @@
+---
+title: "Package Development Answers"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    toc_float: true
+---
+
+These are the answers to the first part of the package development course.  The second part involves actually developing a package so you can't show that in a notebook.
+
+Exercise 1 - Writing functions
+==============================
+
+
+gc_content
+----------
+
+Write the following function, ```gc_content(seq)``` 
+
+Takes in a vector of DNA sequences and returns a vector of %GC values (what percentage of the bases are G or C).  You should verify that the argument is really a character vector and throw an error if not.  You should verify that the bases in the strings only consist of GAT or C and throw a warning if other bases are found.  The function should be able to cope with upper or lower case text.
+
+Run the function with data which validates that each of the requirements above is fulfilled.
+
+
+We'll load the assertthat library to make our checks easier.
+```{r message=FALSE}
+library(assertthat)
+library(tidyverse)
+```
+
+```{r}
+gc_content <- function(seq) {
+  
+  assert_that(is.character(seq))
+  
+  if (any(str_detect(seq,"[^GATC]"))) {
+    warning("Non GATC characters found in sequences")
+  }
+  
+  seq <- toupper(seq)
+  
+  str_replace_all(seq,"[^GC]","") -> just_gc
+  
+  return(100*(nchar(just_gc)/nchar(seq)))
+
+}
+```
+
+
+This should work
+```{r}
+gc_content(c("GAGCTG", "GGTAGAT", "gattaggac","gttgatgat"))
+
+```
+
+
+This should fail
+```{r error=TRUE}
+gc_content(c(2,5,12))
+```
+This should give a warning
+
+```{r}
+gc_content(c("GAGCTG", "GGNNAGAT", "gattaggac","gttgatgat"))
+
+```
+
+
+read_fastq
+----------
+
+Write the following function ```read_fastq(file)```
+
+This function should read a fastq file and put it into a tibble.  Fastq files are split in to 4 line records where the lines are:
+
+1. ID line. Starts with an ```@``` symbol.  Sequence ID is anything after that.  IDs should be unique
+2. Sequence line - should be GATCN bases
+3. Mid line - starts with a ```+``` generally ignored.
+4. Quality line.  Should be characters the same length as the sequence.
+
+An example of a fastq file is this:
+
+```
+@1HWUSI-EAS460:44:661VRAAXX:2:1:15253:1153
+GCCNGGCTATGCAAGCAGGCTGCAGTGTGGATATAGTCGT
++1HWUSI-EAS460:44:661VRAAXX:2:1:15253:1153
+???#;ABAAAHHHHGHFGDHEG@GG@GDGGB>DDDGBDD=
+@2HWUSI-EAS460:44:661VRAAXX:2:1:17398:1153
+CAGNGAATCCTTGAGGCACCTTCTCTTATAAAAACA
++2HWUSI-EAS460:44:661VRAAXX:2:1:17398:1153
+BBB#BFFFEFHHHHHDHHHHHHHHHHHHHHHHHHHH
+```
+
+The function should read a fastq file and put it into a tibble with one row per fastq entry where the columns are:
+
+1. ID (the sequence ID from the first line, minus the ```@```)
+2. Bases (the bases from the second line)
+3. Qualities (the quality string from the 4th line)
+4. GC (the GC content of the bases)
+
+You should verify that the fastq location provided is a file that you can read and has an extension of .fq.  You should check that all of the IDs in the file are unique and that the length of the bases matches the length of the qualities.  If any of these is not true then an error should be produced.
+
+
+```{r}
+read_fastq <- function(file) {
+  assert_that(is.readable(file))
+  assert_that(has_extension(file,"fq"))
+
+  scan(file, character()) -> file.lines
+  file.lines[c(T,F,F,F)] -> ids
+  file.lines[c(F,T,F,F)] -> sequences
+  file.lines[c(F,F,F,T)] -> qualities
+
+  if (!all(startsWith(ids,"@"))) {
+    stop("Some ID lines didn't start with @")
+  }
+
+  str_sub(ids,2) -> ids
+  
+  if (!all(nchar(sequences)==nchar(qualities))) {
+    stop("Some sequences were a different length to the qualities")
+  }
+  
+  if (any(duplicated(ids))) {
+    stop("Some IDs are duplicated")
+  }
+  
+  tibble(ID = ids, Bases=sequences, Qualities=qualities, GC=gc_content(sequences)) %>%
+    return()
+    
+}
+```
+
+
+Now test this with the example files
+
+```{r}
+read_fastq("fastq_examples/good.fq")
+```
+
+
+```{r}
+
+invisible(sapply(
+  list.files("testPkg/PackageDevelopmentData/fastq_examples", pattern="*", full.names = TRUE),
+  function(x){
+    print(paste("Processing",x))
+    try(read_fastq(x) -> temp)
+    return(x)
+  }
+))
+
+```
+
+
+decode_qualities
+----------------
+
+Write the function ```decode_qualities(qualities,offset=33)``` which converts a scalar string of quality values into a vector of Phred scores.
+
+The conversion calculation is:
+
+ASCII value of letter - offset
+
+Validate that the offset is either 33 or 64 (the only two offsets used in fastq files) and that after decoding all of the phred scores are >0
+
+```{r}
+read_fastq("fastq_examples/good.fq") %>%
+  slice(1) %>%
+  pull(Qualities) -> test_qualities
+
+test_qualities
+```
+
+
+```{r}
+decode_qualities <- function(qualities, offset=33) {
+
+  assert_that(is.scalar(offset))
+  assert_that(is.number(offset))
+  
+  if (!(offset==33 | offset==64)) {
+    stop("Offset can only be 33 or 64")
+  }
+  
+  as.integer(charToRaw(qualities)) - offset -> phred_scores
+  
+  if (any(phred_scores < 1)) {
+    stop("Negative phred scores produced - check offset")
+  }
+  
+  return(phred_scores)
+}
+
+```
+
+Now let's test it.
+
+```{r}
+decode_qualities(test_qualities)
+```
+
+```{r}
+try(decode_qualities(test_qualities, offset="sanger"))
+```
+
+```{r}
+try(decode_qualities(test_qualities, offset=c(33,64)))
+```
+
+```{r}
+try(decode_qualities(test_qualities, offset=64))
+```
+
+
+
