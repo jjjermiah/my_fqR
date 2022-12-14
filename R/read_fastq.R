@@ -44,6 +44,6 @@ read_fastq <- function(file){
     )
     return(filetibble)
 }
-path <- "./PackageDevelopmentData/fastq_examples/good.fq"
-x <- read_fastq(path)
-gc_content("GCGCA")
+# path <- "./PackageDevelopmentData/fastq_examples/good.fq"
+# x <- read_fastq(path)
+# gc_content("GCGCA")

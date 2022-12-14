@@ -32,9 +32,9 @@ gc_content <- function(my_seq){
     return(100*GC)
 }
 
-my_Seq <- c(
-    "GCCNGGCTATGCAAGCAGGCTGCAGTGTGGATATAGTCGT",
-    "CAGNGAATCCTTGAGGCACCTTCTCTTATAAAAACA",
-    "CAGaacgtCTTGAGGCACacccgTTATAAAAACA"
-)
-gc_content(my_Seq)
+# my_Seq <- c(
+#     "GCCNGGCTATGCAAGCAGGCTGCAGTGTGGATATAGTCGT",
+#     "CAGNGAATCCTTGAGGCACCTTCTCTTATAAAAACA",
+#     "CAGaacgtCTTGAGGCACacccgTTATAAAAACA"
+# )
+# gc_content(my_Seq)
